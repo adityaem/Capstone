@@ -1,0 +1,265 @@
+---
+title: "Analysis and Approach Summary to developing a Predictive Text Analytics Solution for Swiftkey"
+author: "AKT"
+date: "Saturday, March 19, 2016"
+output: html_document
+---
+Around the world, people are spending an increasing amount of time on their mobile devices for email, social networking, banking and a whole range of other activities. But typing on mobile devices can be a serious pain. SwiftKey, our corporate partner in this capstone, builds a smart keyboard that makes it easier for people to type on their mobile devices. Our goal is to develop a product that will enhance the smart keyboard with integrated predictive analytics.
+
+In this report we will explore the available dataset to help define the approach towards developing the end model/solution by better understanding the data. We will report any any key features that will be instrumental for the end model/solution.
+
+1. Exploratory analysis - perform a thorough exploratory analysis of the data, understanding the distribution of words and relationship between the words in the corpora.
+
+2. Understand frequencies of words and word pairs - build figures and tables to understand variation in the frequencies of words and word pairs in the data
+
+Key Report Sections:
+1. Download the Data
+
+2. Summary Statistics based on the files downloaded
+
+3. Create the corpus (A text corpus is a large and structured set of texts They are used to do statistical analysis and hypothesis testing, ...)
+
+4. Text Analysis (Word Clouds, Frequency...)
+
+5. Data features & Insights (N Grams)
+
+6. Conclusion & Next Steps
+
+#####1. Download your data set and preprare for Summary Analysis.
+```{r}
+# Make sure you download and save the data  in your working directory
+if (!file.exists(paste(getwd(),"/Coursera-SwiftKey.zip",sep=""))) {
+dlurl <- 'https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip'  
+download.file(dlurl,destfile='Coursera-SwiftKey.zip',mode='wb')  
+unzip('Coursera-SwiftKey.zip')
+}
+# Verify what was unzipped above.
+list.dirs("C:/coursera/Capstone")
+list.files("final/en_US")
+list.files("final/en_DE")
+list.files("final/en_FI")
+list.files("final/en_RU")
+#Based on the four language folders available we will use English(en_US) for this exploratory exercise. 
+file.info("final/en_US/en_US.blogs.txt")$size   / 1024^2
+file.info("final/en_US/en_US.news.txt")$size    / 1024^2
+file.info("final/en_US/en_US.twitter.txt")$size / 1024^2
+# Based on the size we will need to keep in mind how big the sample size can be as response times need to be in subseconds.
+#Now lets get sum summary stats on the three files.
+blogs_en <- readLines("final/en_US/en_US.blogs.txt", encoding="UTF-8")
+#The en_US.news.txt file has an incomplete final line - to supress that warning message setting the Warn to FALSE.
+news_en <- readLines("final/en_US/en_US.news.txt", encoding="UTF-8",warn = FALSE)
+#You get a warning on 4 lines in the en_US.twitter.txt data w.r.t to embedded nul's.To process cleanly set the skipNul parameter to TRUE.
+twitter_en <- readLines("final/en_US/en_US.twitter.txt", encoding="UTF-8",skipNul=TRUE)
+```
+
+Once the files have been downloaded we get some basic file information with respect to number of files and the size of each. The data set for the English Locale contains three files - 
+`r  file.info("final/en_US/en_US.blogs.txt")$size   / 1024^2` (1. en_US.blogs.txt Size  in MB)
+`r  file.info("final/en_US/en_US.news.txt")$size   / 1024^2` (2. en_US.news.txt Size  in MB)
+`r  file.info("final/en_US/en_US.twitter.txt")$size   / 1024^2` (3. en_US.twitter.txt Size  in MB)
+
+#####2. Summary Statistics based on the files downloaded 
+The first step in analyzing any new data set is figuring out: (a) what data you have and (b) what are the standard tools and models used for that type of data.The data is from a corpus called HC Corpora (www.corpora.heliohost.org). See the readme file at http://www.corpora.heliohost.org/aboutcorpus.html for details on the corpora available. Due to the large size of the data set we will also create a data set based on samples from the three files. The sample size will be based on the summary statistics of each file and be a percentage of the number of lines in each file. This is a variable that can be modified to improve run time at the cost of the sample data set size.
+
+```{r}
+library(stringi) #use stringi as it this package wil perform all word statistics.
+stri_stats_latex( blogs_en )
+stri_stats_latex( news_en )
+stri_stats_latex( twitter_en )
+stri_stats_general( blogs_en )
+stri_stats_general( news_en )
+stri_stats_general( twitter_en )
+#Create sample outputs for use in corpus - sample size based on using 60% of lines in each file. This will help speed up processing.
+Twitter_Rows <- length(twitter_en)
+News_Rows <- length(news_en)
+Blogs_Rows <- length(blogs_en)
+Samplesize_Twitter <- Twitter_Rows*0.01
+Samplesize_News <- News_Rows*0.01
+Samplesize_Blogs <- Blogs_Rows*0.01
+SampleTwitter <- twitter_en[sample(1:length(twitter_en),Samplesize_Twitter)]
+SampleNews <- news_en[sample(1:length(news_en),Samplesize_News)]
+SampleBlogs <- blogs_en[sample(1:length(blogs_en),Samplesize_Blogs)]
+CombinedSample <- c(SampleTwitter,SampleNews,SampleBlogs)
+#Save off the Sample for use in building the corpus
+if (!file.exists("C:/coursera/Capstone/data"))
+  {
+  dir.create(file.path("C:/coursera/Capstone","data"))
+} 
+if (!file.exists("C:/coursera/Capstone/data/CombinedSample.txt"))
+  {
+  writeLines(CombinedSample, "C:/coursera/Capstone/data/CombinedSample.txt")
+} else {
+file.remove("C:/coursera/Capstone/data/CombinedSample.txt")
+writeLines(CombinedSample, "C:/coursera/Capstone/data/CombinedSample.txt")
+}
+
+#Summary Stats on Sample Data Set
+stri_stats_general( CombinedSample)
+stri_stats_latex( CombinedSample)
+file.info("C:/coursera/Capstone/data/CombinedSample.txt")$size / 1024^2
+```
+
+The final combined sample file only has 33365 lines and 708600 words to form the basis of the corpus. 
+The overall size is `r  file.info("C:/coursera/Capstone/data/CombinedSample.txt")$size   / 1024^2` (in MB) which is much smaller than the data set we started with.
+
+
+#####3. Create the corpus - (A text corpus is a large and structured set of texts They are used to do statistical analysis and hypothesis testing, ...)
+To make this usable we will perform some pre-processing over the combined sample data set and create the corpus to be used for mining. We will clean the data using the tm package. Reference: Basic Text Mining with R (https://rstudio-pubs-static.s3.amazonaws.com/31867_8236987cf0a8444e962ccd2aec46d9c3.html).
+Note several methods can be used in addition to the ones listed below like profane words that you may want to remove from the model. 
+```{r}
+Needed <- c("tm", "SnowballCC", "RColorBrewer", "ggplot2", "wordcloud", "biclust", "cluster", "igraph", "fpc","Rcampdf")   
+cname <-  "C:/coursera/Capstone/data"
+dir(cname)   
+library(tm) 
+library(SnowballC) 
+docs <- Corpus(DirSource(cname))
+summary(docs)
+inspect(docs)
+profanityWords <- readLines("C:/coursera/Capstone/profane-words.txt", encoding="UTF-8",warn = FALSE)
+docs <- tm_map(docs, removePunctuation) 
+docs <- tm_map(docs, removeWords, profanityWords)
+docs <- tm_map(docs, removeNumbers)      # *Removing numbers:*    
+docs <- tm_map(docs, tolower)   # *Converting to lowercase:*    
+docs <- tm_map(docs, removeWords, stopwords("english"))   # *Removing "stopwords" 
+docs <- tm_map(docs, stemDocument)   # *Removing common word endings* (e.g., "ing", "es")   
+docs <- tm_map(docs, stripWhitespace)   # *Stripping whitespace   
+docs <- tm_map(docs, PlainTextDocument)   
+
+```
+
+#####4. Text Analysis (Word Clouds, Frequency...)- Some interesting observations Part 1
+
+```{r}
+### Stage the Data      
+dtm <- DocumentTermMatrix(docs)   
+  
+### Explore the data  by first organizing the terms by frequency - Store Term, Order and Frequency      
+freq <- colSums(as.matrix(dtm))   
+length(freq)   
+ord <- order(freq)   
+m <- as.matrix(dtm)   
+dim(m)   
+
+write.csv(m, file="DocumentTermMatrix.csv")   
+#Remove non relevant data - Start by removing sparse terms:   
+dtms <- removeSparseTerms(dtm, 0.1) # This makes a matrix that assumes only terms that have only 10% empty space- this will help eliminate a lot of insignifant rows. 
+### Word Frequency   
+head(table(freq), 20)   
+# The above output is two rows of numbers. The top number is the frequency with which 
+# words appear and the bottom number reflects how many words appear that frequently. 
+#
+tail(table(freq), 20)   
+# Considering only the 20 greatest frequencies
+#
+# **View a table of the terms after removing sparse terms, as above.
+freq <- colSums(as.matrix(dtms))   
+#freq   
+# The above matrix was created using a data transformation we made earlier. 
+# **An alternate view of term frequency:**   
+# This will identify all terms that appear frequently (in this case, 50 or more times).   
+#findFreqTerms(dtm, lowfreq=50)   
+### Plot Word Frequencies
+# **Plot words that appear at least 50 times.**   
+library(ggplot2)   
+wf <- data.frame(word=names(freq), freq=freq)   
+p <- ggplot(subset(wf, freq>750), aes(word, freq))    
+p <- p + geom_bar(stat="identity")   
+p <- p + theme(axis.text.x=element_text(angle=45, hjust=1))   
+p  
+#  
+### Word Clouds! - Represent significant values (words).
+# First load the package that makes word clouds in R.    
+library(wordcloud)   
+dtms <- removeSparseTerms(dtm, 0.15) # Prepare the data (max 15% empty space)   
+freq <- colSums(as.matrix(dtm)) # Find word frequencies   
+dark2 <- brewer.pal(6, "Dark2")   
+wordcloud(names(freq), freq, max.words=100, rot.per=0.2, colors=dark2)    
+#
+```
+We see both in the word cloud and the histogram words like "can", "will", "like" have a high frequency of occurance.
+
+#####5. Data features & Insights (N Grams) - Some interesting observations Part 2
+Now lets take a closer look at some patterns based on tokenization of single words (unigrams), paired words (bigrams) and a combination of three words (trigrams) as the pattern signifcance increases the data set with those combinations reduces signifcantly as seen in the plots.
+
+```{r}
+library(dplyr)
+#Create the tokenizer parameters for Bigrams and Trigrams - using the TermDocumentMatrix by default toeknizes single words. This is part of the NLP package.
+tdm <- TermDocumentMatrix(docs) 
+#Remove non relevant data - Start by removing sparse terms:   
+tdms <- removeSparseTerms(tdm, 0.1) # This makes a matrix that assumes only terms that have only 10% empty space- this will help eliminate a lot of insignifant rows. 
+Bigram_Tokenizer <- function(x) RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 2, max = 2))
+Trigram_Tokenizer <- function(x) RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3))
+bigram_document_matrix <- TermDocumentMatrix(docs, control = list(tokenize = Bigram_Tokenizer))
+trigram_document_matrix <- TermDocumentMatrix(docs, control = list(tokenize = Trigram_Tokenizer))
+unigram_document_matrix <- TermDocumentMatrix(docs)
+
+unigram_matrix <- removeSparseTerms(unigram_document_matrix, 0.1)
+bigram_matrix <- removeSparseTerms(bigram_document_matrix, 0.1)
+trigram_matrix <- removeSparseTerms(trigram_document_matrix, 0.1)
+
+trigram_matrix <- as.matrix(trigram_document_matrix)
+bigram_matrix <- as.matrix(bigram_document_matrix)
+unigram_matrix <- as.matrix(unigram_document_matrix)
+
+bigram.freq <- as.data.frame(rowSums(bigram_matrix))
+trigram.freq <- as.data.frame(rowSums(trigram_matrix))
+unigram.freq <- as.data.frame(rowSums(unigram_matrix))
+bigram.freq$bigram <- row.names(bigram.freq)
+trigram.freq$trigram <- row.names(trigram.freq)
+unigram.freq$unigram <- row.names(unigram.freq)
+unigram.freq <- tbl_df(data.frame(unigram.freq[,2],unigram.freq[,1]))
+bigram.freq <- tbl_df(data.frame(bigram.freq[,2],bigram.freq[,1]))
+trigram.freq <- tbl_df(data.frame(trigram.freq[,2],trigram.freq[,1]))
+names(bigram.freq) <- c("bigram","count")
+names(trigram.freq) <- c("trigram","count")
+names(unigram.freq) <- c("unigram","count")
+
+uf.ordered <- transform(unigram.freq,unigram = reorder(unigram,count))
+p <- ggplot(subset(uf.ordered, count>750), aes(unigram,count))
+p <- p + geom_bar(stat="identity",fill = "blue")
+p <- p + theme(axis.text.x=element_text(angle=45, hjust=1)) + coord_flip() +
+  xlab("Words") + ylab("Count") + ggtitle("Unigram/Single Word Count")
+p
+
+bf.ordered <- transform(bigram.freq,bigram = reorder(bigram ,count))
+p <- ggplot(subset(bf.ordered, count>50), aes(bigram, count))
+p <- p + geom_bar(stat="identity",fill = "green")
+p <- p + theme(axis.text.x=element_text(angle=45, hjust=1)) + coord_flip() +
+  xlab("Bigrams") + ylab("Count") + ggtitle("Bigram Count")
+p
+
+tf.ordered <- transform(trigram.freq,trigram = reorder(trigram ,count))
+p <- ggplot(subset(tf.ordered, count>10), aes(trigram, count))
+p <- p + geom_bar(stat="identity",fill = "orange")
+p <- p + theme(axis.text.x=element_text(angle=45, hjust=1)) + coord_flip() +
+  xlab("Trigrams") + ylab("Count") + ggtitle("Trigram Count")
+p
+```
+
+The sample data set though limited did show some interesting patterns especially when looking at the bigrams & trigrams.
+where we saw three categories like 1. events ("happy mothers day", "happy new year"), 2. places  ("new york city", "north dakota township") , and 3. conversations (this category is pretty broad - Opportunity for deeper categorization/classification) ("please let know","cant wait see", "let us know")
+
+#####6. Conclusion & Next Steps
+
+To develop an effective model with acceptable response times the corpus needs to be optimized to the relevent patterns. This allows us to tune it using the following levers:
+1. Sample Size - A simple sampling method was used and by changing the % proportion of the files the data set can change significantly. One of the downsides of this approach is that we are only sampling 5% rows of the total file - this could lead to inaccuracies in the actual predictive model. However the entire data set is unmanageable due to its large size unless we stored it in a large in memory data base like ryft-one/hyper-v. Tried in increments of 5% to increase the sample data set and over-all run times increase exponentially.The biggest bottleneck tends to be (1) The analysis of the Document terms Matrix. (2)Preprocessing of the data for creating the corpus - Next Steps: Need to review alternatives to increasing sample size and expanding relevant word patterns for the Corpus.
+
+2.Preprocessing insights - removing stop words is a powerful preprocessing tool. 
+3.n-Grams & Wordclouds help visualize patterns and provide feedback to tuning samples and removing sparse data.
+
+
+
+The solution needs to be continue enriching its corpus based on incorporating new documents and also feedback provided by the user - Add to the corpus*
+The end solution will be a shiny application (the r-modules can be easily integrated into the Swiftkey solution). 
+This application will emulate predicting the following
+1. If the user types the first word they will be presented with all options that complete a three word block
+2. If the user types the first two words  they will be prompted with all options that complete a three word block
+
+The selections in any of the above will train the model helping refine the choices and helping become more accurate. This is limited due to sample size to three words the goal is to increase the n-grams ceiling from 3 to at least 7-10
+
+#####7. References
+1. Basic Text Mining in R - https://rstudio-pubs-static.s3.amazonaws.com/31867_8236987cf0a8444e962ccd2aec46d9c3.html
+2. The data is from a corpus called HC Corpora - http://www.corpora.heliohost.org/aboutcorpus.html
+3. Basics for NLP - https://en.wikipedia.org/wiki/Natural_language_processing
+4. CRAN NLP - https://cran.r-project.org/web/views/NaturalLanguageProcessing.html
+5. Text Mining Infrastructure in R - https://www.jstatsoft.org/article/view/v025i05
+6. List of English Stop Words - http://xpo6.com/list-of-english-stop-words/
