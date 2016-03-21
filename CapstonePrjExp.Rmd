@@ -263,3 +263,4 @@ The selections in any of the above will train the model helping refine the choic
 4. CRAN NLP - https://cran.r-project.org/web/views/NaturalLanguageProcessing.html
 5. Text Mining Infrastructure in R - https://www.jstatsoft.org/article/view/v025i05
 6. List of English Stop Words - http://xpo6.com/list-of-english-stop-words/
+7. github repository for the Capstone Project - https://github.com/adityaem/Capstone
