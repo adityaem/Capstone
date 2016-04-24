@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {{> head }}
+  {{{ page.assets.css }}}
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="{{page.url.lib}}/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="{{page.url.framework}}/js/slides" 
+    src="{{page.url.framework}}/js/require-1.0.8.min.js">
+  </script>
+  
+  {{{ page.assets.jshead }}}
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    {{> logoslide }}
+
+    {{> titleslide }}
+    
+
+    <!-- SLIDES -->
+    {{{ page.content }}}
+    <slide class="backdrop"></slide>
+  </slides>
+  
+  <slide class="{{ slide.class }}">
+  <hgroup>
+    {{{ slide.header }}}
+  </hgroup>
+  <article>
+    {{{ slide.content }}}  
+   <footer class = 'footer'>
+     <div> <BR> </div>
+     div> <BR> </div>
+     <div style="text-align:center" >
+      <img height='67' width = '1100'  src = 'https://raw.githubusercontent.com/adityaem/Capstone/master/Capstonelogo.png'> </img> <BR> </div>
+      div> <BR> </div>
+   </footer>
+  </article>
+ </slide>
+  
+  {{> pagination }}
+
+  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  {{{ page.assets.js }}}
+  {{> javascripts }}
+</html>
