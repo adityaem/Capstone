@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Capstone - Swiftkey Presentation</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Capstone - Swiftkey Presentation">
+  <meta name="author" content="AKT">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Capstone - Swiftkey Presentation</h1>
+    <h2>Word Predictor 1.0</h2>
+    <p>AKT<br/>April 2016</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>Introduction &amp; Objectives</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li><p>Around the world, people are spending an increasing amount of time on their mobile devices for email, social networking, banking and a whole range of other activities. But typing on mobile devices can be a challenge</p></li>
+<li><p>SwiftKey, our corporate partner in this capstone, builds a smart keyboard that makes it easier for people to type on their mobile devices </p></li>
+<li><p>Our goal is to develop a product that will enhance the smart keyboard with integrated predictive analytics</p></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="nobackground" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>Approach</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol class = "build incremental">
+<li>First exploratory analysis on the data was performed <a href=https://rpubs.com/adityaem/163650>Click to View: Analysis and Approach Summary</a></li>
+<li>Based on the above observations an optimum sample set was developed as a source for the corpus (combining samples of Blogs, News &amp; Twitter data)</li>
+<li>The sample data set is then cleansed by using text mining (tm) methods and sparse terms are removed</li>
+<li>The clean corpus is then tokenized into unigrams, bigrams, trigrams and quadgams</li>
+<li>To support efficient processing four.RDATA tables were created to store the unigrams,bigrams,trigrams and quadgrams to be used by the application</li>
+<li>To test &amp; demonstrate the power of the predictive model a Shiny Application called the Word Predictor 1.0 was developed</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="nobackground" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>The Model</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The application uses the Katz Back Off Model.It gave the best performance-per-prediction relative to the other models(good turing,Kneser-Ney &amp; interpolated models).</p>
+
+<p><strong>The essential idea is to back-off to lower order models for zero counts.</strong> 
+The equation for Katz&#39;s back-off model is:
+<img src="https://upload.wikimedia.org/math/f/1/d/f1dffd8b30aee3314d256f166f85f0c9.png" title="plot of chunk simple-plot" alt="plot of chunk simple-plot" style="display: block; margin: auto;" /></p>
+
+<ol>
+<li>First start with matching against the first three words of the quadgram with the last three of the input</li>
+<li>If no Quadgram is found, then we back off to a Trigram</li>
+<li>If no Trigram is found, then we back off to a Bigram</li>
+<li>If no Bigram is found, then we back off to Unigram </li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="nobackground" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Application Features</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>✔ <strong>Current Application Features</strong></p>
+
+<ul>
+<li>This application will accept partial sentences and predict the next word in the sentence</li>
+<li>The application allows users to configure word cloud parameters</li>
+<li>The application allows users to automatically add the predicted word to the sentnce</li>
+<li>The application will provide a Wordcloud in context to the word being predicted</li>
+<li>The application will display a bar graph based on the frequency of the word predicted</li>
+</ul>
+
+<p>✔ <strong>Future Roadmap Application Features</strong></p>
+
+<ul>
+<li>Allow users to select alternate predictive models via application preferences</li>
+<li>Implement caching models where more recent words are more likely to appear again</li>
+<li>Implement Trigger models where recent words trigger other words</li>
+<li>Implement Topic Models and also allow for personalization</li>
+<li>Support additional languages outside of English and also language hybrids</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="nobackground" id="slide-5" style="background:;">
+  <hgroup>
+    <h2>Application Tour</h2>
+  </hgroup>
+  <article data-timings="">
+    <h1><a href=https://adityaem.shinyapps.io/CapSwift/> Click here to see the Application in Action</a></h1>
+
+<p>In Application preferences you can control Wordcloud Parameters &amp; control if next word is automatically added to the sentence.</p>
+
+<p><img height='100' width = '800' src = 'https://github.com/adityaem/Capstone/blob/13aebb69adcb71a68a0a1c41eccb42a0cdb8368c/AppPreference.png?raw=true' align ="middle"> </img></p>
+
+<p>Now enter a partial sentence and hit the &quot;Predict&quot; button.If the next word was found &amp; had a more than a single occurance then both Wordclouds and Bar charts will be displayed.</p>
+
+<p><img height='250' width = '800' src = 'https://github.com/adityaem/Capstone/blob/13aebb69adcb71a68a0a1c41eccb42a0cdb8368c/PredictImage.png?raw=true' align ="middle"> </img></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="nobackground" id="slide-6" style="background:;">
+  <hgroup>
+    <h2>Conclusions &amp; Next Steps</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>✔ <strong>Conclusions</strong></p>
+
+<ul>
+<li>An application like the Word Predictor 1.0 can help improve communication accuracy and time to respond </li>
+<li>Using NLP techniques combined with TM and ML the application will be able to help identify and incorporate new language patterns</li>
+<li>Can be integrated into new messaging platforms<a href="http://techcrunch.com/2016/03/17/facebooks-messenger-in-a-bot-store/" > Facebook Bots</a></li>
+<li>The application can improve significantly if tracking and usage can be enabled (PII concerns are a barrier)</li>
+</ul>
+
+<p>✔ <strong>Next Steps for the Word Predictor 1.0</strong></p>
+
+<ul>
+<li>Create a Minimum Viable Product for Alpha testing in the field on IOS and Android platforms (90 Days)</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="nobackground" id="slide-7" style="background:;">
+  <hgroup>
+    <h2>Thank you</h2>
+  </hgroup>
+  <article data-timings="">
+    <h1>Thank you very much for giving me the opportunity to work on this project and present my ideas.</h1>
+
+<ul>
+<li><p><a href=https://github.com/adityaem/Capstone/ >Source code for the Capstone Project</a></p></li>
+<li><p><a href=https://www.coursera.org/learn/data-science-project/home/welcome> Coursera Data Science Home</a></p></li>
+<li><p><a href=https://adityaem.shinyapps.io/CapSwift/> The Word Predictor 1.0 In Action (Capstone Shiny App)</a></p></li>
+<li><p><a href=http://rpubs.com/adityaem/175198> Capstone Final Presentation (Capstone Shiny App)</a></p></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  
+  <slide class="">
+  <hgroup>
+    
+  </hgroup>
+  <article>
+      
+   <footer class = 'footer'>
+     <div> <BR> </div>
+     div> <BR> </div>
+     <div style="text-align:center" >
+      <img height='67' width = '1100'  src = 'https://raw.githubusercontent.com/adityaem/Capstone/master/Capstonelogo.png'> </img> <BR> </div>
+      div> <BR> </div>
+   </footer>
+  </article>
+ </slide>
+  
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Introduction &amp; Objectives'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Approach'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='The Model'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Application Features'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Application Tour'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='Conclusions &amp; Next Steps'>
+         6
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=7 title='Thank you'>
+         7
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
